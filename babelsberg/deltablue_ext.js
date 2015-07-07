@@ -95,7 +95,8 @@ DBPlanner.addMethods({
     },
     solverName: 'DeltaBlue',
     supportsMethods: function() { return true; },
-    supportsSoftConstraints: function() { return true; }
+    supportsSoftConstraints: function() { return true; },
+    supportedDataTypes: function() { return ['number', 'boolean', 'string']; }
 });
 
 Object.extend(DBPlanner, {

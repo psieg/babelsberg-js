@@ -256,8 +256,10 @@ Object.subclass('Babelsberg', {
         func.allowUnsolvableOperations = (opts.allowUnsolvableOperations === true);
         func.debugging = opts.debugging;
         func.onError = opts.onError;
+        //TODO: remove this from all solver implementations or move to filterSolvers
+        func.varMapping = opts.ctx;
 
-        solvers = this.filterSolvers(solvers, opts);
+        solvers = this.filterSolvers(solvers, opts, func);
 
         solvers.each(function(solver) {
             try {
@@ -354,8 +356,18 @@ Object.subclass('Babelsberg', {
         }
     },
 
-    filterSolvers: function(solvers, opts) {
+    filterSolvers: function(solvers, opts, func) {
         var result = [];
+
+        // FIXME: this global state is ugly
+        bbb.seenTypes = new Set();
+        try {
+            cop.withLayers([ConstraintInspectionLayer], function() {
+                func.forInterpretation().apply(undefined, []);
+            });
+        } catch(e) {
+            console.log(e);
+        }
 
         solvers.each(function(solver) {
             if (opts.methods && !solver.supportsMethods()) {
@@ -375,9 +387,20 @@ Object.subclass('Babelsberg', {
                 return false;
             }
 
+            for (var type of bbb.seenTypes) {
+                if (!type in solver.supportedDataTypes()) {
+                    if (opts.logReasons) {
+                        console.log('Ignoring ' + solver.solverName +
+                            ' because it does not support ' + type + ' variables');
+                    }
+                    return false;
+                }
+            }
+
             result.push(solver);
         });
 
+        delete bbb.seenTypes;
         return result;
     },
 
@@ -416,6 +439,48 @@ users.timfelgentreff.jsinterpreter.Send.addMethods({
         this._$args = value;
     }
 });
+
+
+/////////////////////////////////////////////////////////////
+//N.B. the actual purpose of this layer is in ConstraintInterpreterVisitor.visitGetSlot
+cop.create('ConstraintInspectionLayer').
+        refineObject(users.timfelgentreff.jsinterpreter, {
+    get InterpreterVisitor() {
+        return ConstraintInterpreterVisitor;
+    }
+});
+//TODO: needed?
+/*.refineClass(users.timfelgentreff.jsinterpreter.Send, {
+    asFunction: function(optFunc) {
+        console.log('THERE');
+        var initializer = optFunc.prototype.initialize.ast().asFunction();
+        initializer.original = optFunc;
+        return initializer;
+    }
+}).
+refineClass(users.timfelgentreff.jsinterpreter.GetSlot, {
+    set: function(value, frame, interpreter) {
+        console.log('THAT');
+        var obj = interpreter.visit(this.obj),
+            name = interpreter.visit(this.slotName);
+        if (obj === Global || (obj instanceof lively.Module)) {
+            return obj[name] = value;
+        }
+        if (obj && obj.isConstraintObject) {
+            obj = this.getConstraintObjectValue(obj);
+        }
+
+
+        var type = typeof obj[name];
+        bbb.seenTypes.add(type);
+        // add to some global list
+
+        //obj[name] = value
+        return cop.proceed();
+    }
+});*/
+/////////////////////////////////////////////////////////////
+
 
 cop.create('ConstraintConstructionLayer').
         refineObject(users.timfelgentreff.jsinterpreter, {
@@ -1529,6 +1594,13 @@ users.timfelgentreff.jsinterpreter.InterpreterVisitor.
 
 
     visitGetSlot: function($super, node) {
+        if (cop.currentLayers().indexOf(ConstraintInspectionLayer) !== -1) {
+            var obj = this.visit(node.obj),
+                name = this.visit(node.slotName);
+            
+            var type = typeof obj[name];
+            bbb.seenTypes.add(type);
+        }
         if (cop.currentLayers().indexOf(ConstraintConstructionLayer) === -1) {
             // XXX: See visitCond
             return $super(node);
