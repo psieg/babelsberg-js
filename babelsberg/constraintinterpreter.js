@@ -361,13 +361,9 @@ Object.subclass('Babelsberg', {
 
         // FIXME: this global state is ugly
         bbb.seenTypes = new Set();
-        try {
-            cop.withLayers([ConstraintInspectionLayer], function() {
-                func.forInterpretation().apply(undefined, []);
-            });
-        } catch(e) {
-            console.log(e);
-        }
+        cop.withLayers([ConstraintInspectionLayer], function() {
+            func.forInterpretation().apply(undefined, []);
+        });
 
         solvers.each(function(solver) {
             if (opts.methods && !solver.supportsMethods()) {
