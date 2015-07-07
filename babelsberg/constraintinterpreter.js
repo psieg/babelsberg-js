@@ -366,7 +366,10 @@ Object.subclass('Babelsberg', {
                 func.forInterpretation().apply(undefined, []);
             });
         } catch(e) {
-            console.log(e);
+            if (opts.logReasons) {
+                console.log('Parsing the expression for types failed, '+
+                   'will not check types');
+            }
         }
 
         solvers.each(function(solver) {
