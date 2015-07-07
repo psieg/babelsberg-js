@@ -443,47 +443,17 @@ users.timfelgentreff.jsinterpreter.Send.addMethods({
     }
 });
 
+cop.create('ConstraintInspectionLayer')
+.refineClass(users.timfelgentreff.jsinterpreter.InterpreterVisitor, {
+    visitGetSlot: function(node) {
+        var obj = this.visit(node.obj),
+            name = this.visit(node.slotName),
+            value = obj[name];
 
-/////////////////////////////////////////////////////////////
-//N.B. the actual purpose of this layer is in ConstraintInterpreterVisitor.visitGetSlot
-cop.create('ConstraintInspectionLayer').
-        refineObject(users.timfelgentreff.jsinterpreter, {
-    get InterpreterVisitor() {
-        return ConstraintInterpreterVisitor;
-    }
+        bbb.seenTypes.add(typeof value);
+        return value;
+    },
 });
-//TODO: needed?
-/*.refineClass(users.timfelgentreff.jsinterpreter.Send, {
-    asFunction: function(optFunc) {
-        console.log('THERE');
-        var initializer = optFunc.prototype.initialize.ast().asFunction();
-        initializer.original = optFunc;
-        return initializer;
-    }
-}).
-refineClass(users.timfelgentreff.jsinterpreter.GetSlot, {
-    set: function(value, frame, interpreter) {
-        console.log('THAT');
-        var obj = interpreter.visit(this.obj),
-            name = interpreter.visit(this.slotName);
-        if (obj === Global || (obj instanceof lively.Module)) {
-            return obj[name] = value;
-        }
-        if (obj && obj.isConstraintObject) {
-            obj = this.getConstraintObjectValue(obj);
-        }
-
-
-        var type = typeof obj[name];
-        bbb.seenTypes.add(type);
-        // add to some global list
-
-        //obj[name] = value
-        return cop.proceed();
-    }
-});*/
-/////////////////////////////////////////////////////////////
-
 
 cop.create('ConstraintConstructionLayer').
         refineObject(users.timfelgentreff.jsinterpreter, {
@@ -1597,13 +1567,6 @@ users.timfelgentreff.jsinterpreter.InterpreterVisitor.
 
 
     visitGetSlot: function($super, node) {
-        if (cop.currentLayers().indexOf(ConstraintInspectionLayer) !== -1) {
-            var obj = this.visit(node.obj),
-                name = this.visit(node.slotName);
-            
-            var type = typeof obj[name];
-            bbb.seenTypes.add(type);
-        }
         if (cop.currentLayers().indexOf(ConstraintConstructionLayer) === -1) {
             // XXX: See visitCond
             return $super(node);
