@@ -391,7 +391,7 @@ Object.subclass('Babelsberg', {
             }
 
             for (var type of bbb.seenTypes) {
-                if (!type in solver.supportedDataTypes()) {
+                if (!solver.supportedDataTypes().has(type)) {
                     if (opts.logReasons) {
                         console.log('Ignoring ' + solver.solverName +
                             ' because it does not support ' + type + ' variables');
@@ -450,7 +450,11 @@ cop.create('ConstraintInspectionLayer')
             name = this.visit(node.slotName),
             value = obj[name];
 
-        bbb.seenTypes.add(typeof value);
+        // For object.sub.some.member, only consider the type of .member
+        node._isGetSlot = true;
+        if (!node.parent._isGetSlot) {
+            bbb.seenTypes.add(typeof value);
+        }
         return value;
     },
 });

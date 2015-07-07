@@ -30,7 +30,7 @@ ClSimplexSolver.addMethods({
     solverName: 'Cassowary',
     supportsMethods: function() { return false; },
     supportsSoftConstraints: function() { return true; },
-    supportedDataTypes: function() { return ['number']; }
+    supportedDataTypes: function() { return new Set(['number']); }
 });
 
 Object.extend(ClSimplexSolver, {

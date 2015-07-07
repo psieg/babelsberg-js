@@ -99,7 +99,10 @@ module('users.timfelgentreff.babelsberg.csp_ext').
         solverName: 'CSP',
         supportsMethods: function() { return false; },
         supportsSoftConstraints: function() { return false; /* XXX: is this correct? */ },
-        supportedDataTypes: function() { return ['number', 'boolean', 'string']; /* XXX: is this correct? */ }
+        supportedDataTypes: function() {
+            /* XXX: is this correct? */
+            return new Set(['number', 'boolean', 'string']);
+        }
     });
     Object.extend(csp.Solver, {
         weight: 1000,
