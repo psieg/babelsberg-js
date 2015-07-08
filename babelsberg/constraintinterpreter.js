@@ -365,9 +365,9 @@ Object.subclass('Babelsberg', {
             cop.withLayers([ConstraintInspectionLayer], function() {
                 func.forInterpretation().apply(undefined, []);
             });
-        } catch(e) {
+        } catch (e) {
             if (opts.logReasons) {
-                console.log('Parsing the expression for types failed, '+
+                console.log('Parsing the expression for types failed, ' +
                    'will not check types');
             }
         }
@@ -456,7 +456,7 @@ cop.create('ConstraintInspectionLayer')
             bbb.seenTypes.add(typeof value);
         }
         return value;
-    },
+    }
 });
 
 cop.create('ConstraintConstructionLayer').
