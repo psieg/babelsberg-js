@@ -262,7 +262,6 @@ Object.subclass('Babelsberg', {
         solvers.each(function(solver) {
             try {
                 var constraint = solver.always(Object.clone(opts), func);
-                constraint.logTimings = opts.logTimings;
                 constraint._options = opts;
                 constraints.push(constraint);
             } catch (e) {
@@ -509,7 +508,7 @@ Object.subclass('Constraint', {
     addConstraintVariable: function(v) {
         if (v && !this.constraintvariables.include(v)) {
             this.constraintvariables.push(v);
-            v.logTimings = this.logTimings;
+            v.logTimings = this._options.logTimings;
         }
     },
     get predicate() {
@@ -568,7 +567,7 @@ Object.subclass('Constraint', {
             var nBegin = performance.now();
             this.solver.solve();
             var nEnd = performance.now();
-            if (this.logTimings) {
+            if (this._options.logTimings) {
                 console.log((this.solver ? this.solver.solverName : '(no solver)') +
                     ' took ' + (nEnd - nBegin) + ' ms to solve for ' +
                     this.ivarname + ' in enable');
